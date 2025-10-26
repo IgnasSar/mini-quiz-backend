@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MiniQuizBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ea818463d17b5f467fbe9db600672f544d706078")]
 [assembly: System.Reflection.AssemblyProductAttribute("MiniQuizBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MiniQuizBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
