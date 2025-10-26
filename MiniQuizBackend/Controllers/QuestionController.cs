@@ -1,100 +1,66 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using QuizAPI.Interfaces;
 using QuizAPI.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace MiniQuizBackend.Controllers
+namespace QuizAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class QuestionController : ControllerBase
     {
-        private readonly DatabaseContext _context;
+        private readonly IQuestionService _questionService;
 
-        public QuestionController(DatabaseContext context)
+        public QuestionController(IQuestionService questionService)
         {
-            _context = context;
+            _questionService = questionService;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Question>>> GetQuestions()
         {
-            return await _context.Questions.ToListAsync();
+            return Ok(await _questionService.GetAllQuestionsAsync());
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Question>> GetQuestion(int id)
         {
-            var question = await _context.Questions.FindAsync(id);
+            var question = await _questionService.GetQuestionByIdAsync(id);
 
             if (question == null)
-            {
                 return NotFound();
-            }
 
-            return question;
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutQuestion(int id, Question question)
-        {
-            if (id != question.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(question).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!QuestionExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(question);
         }
 
         [HttpPost]
         public async Task<ActionResult<Question>> PostQuestion(Question question)
         {
-            _context.Questions.Add(question);
-            await _context.SaveChangesAsync();
+            var result = await _questionService.CreateQuestionAsync(question);
+            return Ok(result);
+        }
 
-            return CreatedAtAction("GetQuestion", new { id = question.Id }, question);
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutQuestion(int id, Question question)
+        {
+            var updated = await _questionService.UpdateQuestionAsync(id, question);
+
+            if (updated == null)
+                return NotFound();
+
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteQuestion(int id)
         {
-            var question = await _context.Questions.FindAsync(id);
-            if (question == null)
-            {
-                return NotFound();
-            }
+            var deleted = await _questionService.DeleteQuestionAsync(id);
 
-            _context.Questions.Remove(question);
-            await _context.SaveChangesAsync();
+            if (!deleted)
+                return NotFound();
 
             return NoContent();
-        }
-
-        private bool QuestionExists(int id)
-        {
-            return _context.Questions.Any(e => e.Id == id);
         }
     }
 }
