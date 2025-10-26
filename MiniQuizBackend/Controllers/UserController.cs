@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuizAPI.Models;
@@ -30,22 +29,18 @@ namespace MiniQuizBackend.Controllers
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
-
             if (user == null)
             {
                 return NotFound();
             }
-
             return user;
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        public async Task<IActionResult> PutUser(int id, [FromBody] User user)
         {
             if (id != user.Id)
-            {
                 return BadRequest();
-            }
 
             _context.Entry(user).State = EntityState.Modified;
 
@@ -56,39 +51,35 @@ namespace MiniQuizBackend.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!UserExists(id))
-                {
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
 
             return NoContent();
         }
 
- 
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        [Consumes("application/json")]
+        public async Task<ActionResult<User>> PostUser([FromBody] User user)
         {
-            var tempUser = _context.Users
-                .Where(newUser => newUser.Name == user.Name
-                && newUser.Email == user.Email)
-                .FirstOrDefault();
+            if (user == null || string.IsNullOrWhiteSpace(user.Name) || string.IsNullOrWhiteSpace(user.Email))
+                return BadRequest("Invalid user data");
 
-            if (tempUser == null)
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Name == user.Name && u.Email == user.Email);
+
+            if (existingUser == null)
             {
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
             }
             else
-                user = tempUser;
+            {
+                user = existingUser;
+            }
 
-                _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+            return Ok(user);
         }
 
         [HttpDelete("{id}")]
